@@ -10,7 +10,7 @@ from dotenv import load_dotenv  # FIXME: Avoid using .env in production mode.
 
 load_dotenv()
 
-with open("emoji_dataset.json", "r", encoding="utf-8") as read_json:
+with open("../emoji_dataset.json", "r", encoding="utf-8") as read_json:
     emoji_dataset = json.load(read_json)
 
 
