@@ -34,7 +34,7 @@ async def self(interaction: discord.Interaction):
     answer_title = samples[answer_idx]
     answer_emoji = emoji_dataset[answer_title]
 
-    embed = discord.Embed(title="Guess the movie!", description="Choose the movie you think is the correct answer.", color=discord.Color.blue())
+    embed = discord.Embed(title="Guess the movie!", description="Choose the one that seems to be the correct answer from the examples.", color=discord.Color.blue())
     button1 = Button(label=samples[0], style=discord.ButtonStyle.gray, emoji='1️⃣')
     button2 = Button(label=samples[1], style=discord.ButtonStyle.gray, emoji='2️⃣')
     button3 = Button(label=samples[2], style=discord.ButtonStyle.gray, emoji='3️⃣')
@@ -42,14 +42,20 @@ async def self(interaction: discord.Interaction):
     button5 = Button(label=samples[4], style=discord.ButtonStyle.gray, emoji='5️⃣')
     
     async def wrong_answer_button_callback(interaction):      
-        embed = discord.Embed(title="❌", description="Try again!", color=discord.Color.red())
-        embed.set_thumbnail(url=interaction.user.avatar)      
+        embed = discord.Embed(title="❌", description="You answered wrong!\n\nChoose the one that seems to be the correct answer from the other examples.", color=discord.Color.red())
+        if interaction.user.avatar is None:
+            embed.set_thumbnail(url=interaction.user.default_avatar)   
+        else:
+            embed.set_thumbnail(url=interaction.user.avatar)   
         await interaction.response.send_message("<@" + str(interaction.user.id) + ">")
         await interaction.channel.send(embed=embed)
         
     async def correct_answer_button_callback(interaction):      
-        embed = discord.Embed(title="⭕", description="You answered correctly!\n\nUse `/quiz` to start a new quiz.", color=discord.Color.green())
-        embed.set_thumbnail(url=interaction.user.avatar) 
+        embed = discord.Embed(title="⭕", description="You answered correct!\n\nUse `/quiz` to start a new quiz.", color=discord.Color.green())
+        if interaction.user.avatar is None:
+            embed.set_thumbnail(url=interaction.user.default_avatar)   
+        else:
+            embed.set_thumbnail(url=interaction.user.avatar)   
         await interaction.response.send_message("<@" + str(interaction.user.id) + ">")
         await interaction.channel.send(embed=embed)
   
@@ -96,7 +102,7 @@ async def self(interaction: discord.Interaction):
     view.add_item(button5)
     
     await interaction.response.send_message(answer_emoji)
-    await interaction.channel.send(embed=embed, view=view)
+    await interaction.channel.send(embed=embed, view=view)    
     
     return 
 
