@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ui import Button, View
 
 
-with open("../emoji_dataset.json", "r", encoding="utf-8") as read_json:
+with open("./emoji_dataset.json", "r", encoding="utf-8") as read_json:
     emoji_dataset = json.load(read_json)
 
 
