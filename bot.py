@@ -28,7 +28,7 @@ tree = app_commands.CommandTree(client)
 @tree.command(name="quiz", description="Start a Quiz!", guild=discord.Object(id=int(os.environ.get('GUILD_ID'))))
 async def self(interaction: discord.Interaction):
     
-    n = int(os.environ.get('QUESTION'))
+    n = 5
     samples = random.sample(list(emoji_dataset.keys()), n)
     answer_idx = random.randrange(0, n)
     answer_title = samples[answer_idx]
