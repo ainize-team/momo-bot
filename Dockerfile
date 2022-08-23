@@ -22,6 +22,7 @@ COPY ./poetry.lock ./poetry.lock
 RUN poetry install --no-dev
 
 COPY ./src/ /app/
+COPY ./emoji_dataset.json /app/emoji_dataset.json
 
 COPY ./start.sh /app/start.sh
 RUN chmod +x /app/start.sh

@@ -1,7 +1,14 @@
 # momo-bot
 
 ## Install
+
 ```
-pip install -U git+https://github.com/Rapptz/discord.py
-pip intstall -r requirements.txt
+poetry install --no-dev
+```
+
+## Developer Settings
+
+```
+poetry install
+pre-commit install
 ```
