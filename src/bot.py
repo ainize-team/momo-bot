@@ -33,7 +33,7 @@ tree = app_commands.CommandTree(client)
     guild=discord.Object(id=int(os.environ.get("GUILD_ID"))),
 )
 async def self(interaction: discord.Interaction):
-
+    number_emoji_list = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
     n = 5
     samples = random.sample(list(emoji_dataset.keys()), n)
     answer_idx = random.randrange(0, n)
@@ -45,11 +45,9 @@ async def self(interaction: discord.Interaction):
         description="Choose the one that seems to be the correct answer from the examples.",
         color=discord.Color.blue(),
     )
-    button1 = Button(label=samples[0], style=discord.ButtonStyle.gray, emoji="1️⃣")
-    button2 = Button(label=samples[1], style=discord.ButtonStyle.gray, emoji="2️⃣")
-    button3 = Button(label=samples[2], style=discord.ButtonStyle.gray, emoji="3️⃣")
-    button4 = Button(label=samples[3], style=discord.ButtonStyle.gray, emoji="4️⃣")
-    button5 = Button(label=samples[4], style=discord.ButtonStyle.gray, emoji="5️⃣")
+    button_list = [
+        Button(label=samples[i], style=discord.ButtonStyle.gray, emoji=number_emoji_list[i]) for i in range(5)
+    ]
 
     async def wrong_answer_button_callback(interaction):
         embed = discord.Embed(
@@ -77,52 +75,16 @@ async def self(interaction: discord.Interaction):
         await interaction.response.send_message("<@" + str(interaction.user.id) + ">")
         await interaction.channel.send(embed=embed)
 
-    if answer_idx == 0:
-        button1.callback = correct_answer_button_callback
-        button2.callback = wrong_answer_button_callback
-        button3.callback = wrong_answer_button_callback
-        button4.callback = wrong_answer_button_callback
-        button5.callback = wrong_answer_button_callback
-
-    elif answer_idx == 1:
-        button1.callback = wrong_answer_button_callback
-        button2.callback = correct_answer_button_callback
-        button3.callback = wrong_answer_button_callback
-        button4.callback = wrong_answer_button_callback
-        button5.callback = wrong_answer_button_callback
-
-    elif answer_idx == 2:
-        button1.callback = wrong_answer_button_callback
-        button2.callback = wrong_answer_button_callback
-        button3.callback = correct_answer_button_callback
-        button4.callback = wrong_answer_button_callback
-        button5.callback = wrong_answer_button_callback
-
-    elif answer_idx == 3:
-        button1.callback = wrong_answer_button_callback
-        button2.callback = wrong_answer_button_callback
-        button3.callback = wrong_answer_button_callback
-        button4.callback = correct_answer_button_callback
-        button5.callback = wrong_answer_button_callback
-
-    elif answer_idx == 4:
-        button1.callback = wrong_answer_button_callback
-        button2.callback = wrong_answer_button_callback
-        button3.callback = wrong_answer_button_callback
-        button4.callback = wrong_answer_button_callback
-        button5.callback = correct_answer_button_callback
-
     view = View()
-    view.add_item(button1)
-    view.add_item(button2)
-    view.add_item(button3)
-    view.add_item(button4)
-    view.add_item(button5)
+    for i in range(5):
+        if i == answer_idx:
+            button_list[i].callback = correct_answer_button_callback
+        else:
+            button_list[i].callback = wrong_answer_button_callback
+        view.add_item(button_list[i])
 
     await interaction.response.send_message(answer_emoji)
     await interaction.channel.send(embed=embed, view=view)
-
-    return
 
 
 client.run(os.environ.get("TOKEN"))
