@@ -15,6 +15,7 @@ pre-commit install
 
 ## How to Execute
 ```
+git clone https://github.com/ainize-team/momo-bot.git
 GUILD_ID={Discord Server ID} TOKEN={Discord Bot Token} python src/bot.py
 ```
 
