@@ -26,7 +26,7 @@ class aclient(discord.Client):
 client = aclient()
 tree = app_commands.CommandTree(client)
 
-quiz_leaderboard = {}
+quiz_leaderboard = {} # TODO: 봇이 재시작하면 리더보드가 초기화되는데, 
 
 @tree.command(
     name="quiz",
