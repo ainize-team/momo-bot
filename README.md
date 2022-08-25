@@ -17,3 +17,8 @@ pre-commit install
 ```
 GUILD_ID={Discord Server ID} TOKEN={Discord Bot Token} python src/bot.py
 ```
+
+## Slash Commands
+```
+/quiz
+```
