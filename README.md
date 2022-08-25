@@ -12,3 +12,8 @@ poetry install --no-dev
 poetry install
 pre-commit install
 ```
+
+## How to Execute
+```
+GUILD_ID={Discord Server ID} TOKEN={Discord Bot Token} python src/bot.py
+```
