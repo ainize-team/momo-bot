@@ -34,7 +34,7 @@ quiz_leaderboard = {}  # TODO: 봇이 재시작하면 리더보드가 초기화�
     description="Start a Quiz!",
     guild=discord.Object(id=int(os.environ.get("GUILD_ID"))),
 )
-async def self(interaction: discord.Interaction):
+async def quiz(interaction: discord.Interaction):
 
     quiz_id = interaction.id
     quiz_leaderboard[quiz_id] = list()
@@ -139,12 +139,12 @@ async def self(interaction: discord.Interaction):
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
         button.callback = button_callback
-        view = View()
+        view = View(timeout=None)
         view.add_item(button)
 
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    view = View()
+    view = View(timeout=None)
     for i in range(n):
         if i == answer_idx:
             button_list[i].callback = correct_answer_button_callback
