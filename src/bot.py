@@ -64,10 +64,6 @@ async def self(interaction: discord.Interaction):
                 description="You have already solved the quiz.",
                 color=discord.Color.red(),
             )
-            if interaction.user.avatar is None:
-                embed.set_thumbnail(url=interaction.user.default_avatar)
-            else:
-                embed.set_thumbnail(url=interaction.user.avatar)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
             return
@@ -77,10 +73,6 @@ async def self(interaction: discord.Interaction):
             description="You answered wrong!\n\nChoose the one that seems to be the correct answer from the other examples.",
             color=discord.Color.red(),
         )
-        if interaction.user.avatar is None:
-            embed.set_thumbnail(url=interaction.user.default_avatar)
-        else:
-            embed.set_thumbnail(url=interaction.user.avatar)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     async def correct_answer_button_callback(interaction):
@@ -91,10 +83,6 @@ async def self(interaction: discord.Interaction):
                 description="You have already solved the quiz.",
                 color=discord.Color.red(),
             )
-            if interaction.user.avatar is None:
-                embed.set_thumbnail(url=interaction.user.default_avatar)
-            else:
-                embed.set_thumbnail(url=interaction.user.avatar)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
             return
@@ -106,12 +94,8 @@ async def self(interaction: discord.Interaction):
             description="You answered correct!\n\nUse `/quiz` to start a new quiz.",
             color=discord.Color.green(),
         )
-        if interaction.user.avatar is None:
-            embed.set_thumbnail(url=interaction.user.default_avatar)
-        else:
-            embed.set_thumbnail(url=interaction.user.avatar)
 
-        button = Button(label="leaderboard", style=discord.ButtonStyle.gray, emoji="🏆")
+        button = Button(label="Leaderboard", style=discord.ButtonStyle.gray, emoji="🏆")
 
         async def button_callback(interaction):
             rank = 1
@@ -139,12 +123,11 @@ async def self(interaction: discord.Interaction):
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
         button.callback = button_callback
-        view = View()
+        view = View(timeout=None)
         view.add_item(button)
-
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    view = View()
+    view = View(timeout=None)
     for i in range(n):
         if i == answer_idx:
             button_list[i].callback = correct_answer_button_callback
