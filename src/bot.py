@@ -69,9 +69,7 @@ async def self(interaction: discord.Interaction):
                 embed.set_thumbnail(url=interaction.user.default_avatar)
             else:
                 embed.set_thumbnail(url=interaction.user.avatar)
-            message = await interaction.response.send_message(embed=embed, ephemeral=True)
-            time.sleep(10)
-            await message.delete()
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
             return
 
