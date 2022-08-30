@@ -2,6 +2,7 @@ import json
 import os
 import random
 import time
+
 import discord
 from discord import app_commands
 from discord.ui import Button, View
@@ -26,7 +27,8 @@ class aclient(discord.Client):
 client = aclient()
 tree = app_commands.CommandTree(client)
 
-quiz_leaderboard = {} # TODO: 봇이 재시작하면 리더보드가 초기화되는데, 이를 방지하는 작업 필요
+quiz_leaderboard = {}  # TODO: 봇이 재시작하면 리더보드가 초기화되는데, 이를 방지하는 작업 필요
+
 
 @tree.command(
     name="quiz",
@@ -85,7 +87,7 @@ async def self(interaction: discord.Interaction):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     async def correct_answer_button_callback(interaction):
-        
+
         if str(interaction.user) in quiz_leaderboard[quiz_id]:
             embed = discord.Embed(
                 title="🚫",
@@ -101,7 +103,7 @@ async def self(interaction: discord.Interaction):
             return
 
         quiz_leaderboard[quiz_id].append(str(interaction.user))
-        
+
         embed = discord.Embed(
             title="⭕",
             description="You answered correct!\n\nUse `/quiz` to start a new quiz.",
@@ -118,12 +120,17 @@ async def self(interaction: discord.Interaction):
             rank = 1
             description = ""
             for user in quiz_leaderboard[quiz_id]:
-                if rank == 11: break
+                if rank == 11:
+                    break
 
-                if rank == 1: description += "🥇 " + user + "\n"
-                elif rank == 2: description += "🥈 " + user + "\n"
-                elif rank == 3: description += "🥉 " + user + "\n"
-                else: description += "`" + str(rank) + " ` " + user + "\n"
+                if rank == 1:
+                    description += "🥇 " + user + "\n"
+                elif rank == 2:
+                    description += "🥈 " + user + "\n"
+                elif rank == 3:
+                    description += "🥉 " + user + "\n"
+                else:
+                    description += "`" + str(rank) + " ` " + user + "\n"
                 rank += 1
 
             embed = discord.Embed(
@@ -133,7 +140,7 @@ async def self(interaction: discord.Interaction):
             )
 
             await interaction.response.send_message(embed=embed, ephemeral=True)
-            
+
         button.callback = button_callback
         view = View()
         view.add_item(button)
@@ -150,5 +157,6 @@ async def self(interaction: discord.Interaction):
 
     await interaction.response.send_message(answer_emoji)
     await interaction.channel.send(embed=embed, view=view)
+
 
 client.run(os.environ.get("TOKEN"))
