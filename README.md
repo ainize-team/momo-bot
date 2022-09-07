@@ -1,27 +1,35 @@
-# momo-bot
+# MOMO(MOvie eMOji) Quiz Discord Bot 🤖🌎🗑
 
-## Install
+This is Discord Bot for MOMO(MOvie eMOji) quiz. Users guess what movie it is by looking at the emoji.
 
-```
-poetry install --no-dev
-```
+Data used for quiz were created by GPT-3 in OpenAI API.
 
 ## Developer Settings
 
 ```
-poetry install
-pre-commit install
+$ git clone https://github.com/ainize-team/momo-bot.git
+$ cd momo-bot
+$ poetry install
+$ pre-commit install
 ```
 
-## How to Execute
+## How to execute using Docker
 ```
-git clone https://github.com/ainize-team/momo-bot.git
-GUILD_ID={Discord Server ID} TOKEN={Discord Bot Token} python src/bot.py
+$ git clone https://github.com/ainize-team/momo-bot.git
+$ cd momo-bot
+$ docker build -t momo-bot .
+$ docker run -d \
+-e GUILD_ID=<Discord GUILD ID> \
+-e TOKEN=<Discord Bot Token> \
+-e DATABASE_URL=<Firebase Realtime Database URL> \
+-v <Firebase Credential Directory Path>:/app/key \
+momo-bot
 ```
+
 
 ## Slash Commands
 ```
-/quiz
+/quiz : Start a new quiz.
 ```
 
 ## Demo
