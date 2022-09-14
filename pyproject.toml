@@ -16,12 +16,15 @@ use_parentheses = true
 name = "momo-bot"
 version = "0.1.0"
 description = ""
-authors = ["Jeongho Ju <jeongho@comcom.ai>", "YoungJae Kim <byeongal@comcom.ai>"]
+authors = ["Jeongho Ju <jeongho@comcom.ai>", "YoungJae Kim <byeongal@comcom.ai>", "Donghoon Baek <baek@comcom.ai>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 "discord.py" = "^2.0.0"
-python-dotenv = "^0.20.0"
+firebase-admin = "5.3.0"
+pydantic = "^1.10.2"
+loguru = "^0.6.0"
+asyncio = "^3.4.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"

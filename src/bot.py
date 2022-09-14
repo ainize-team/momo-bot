@@ -1,17 +1,23 @@
+import asyncio
 import json
-import os
 import random
 
 import discord
+import firebase_admin
 from discord import app_commands
 from discord.ui import Button, View
+from firebase_admin import credentials
+from loguru import logger
+
+from settings import discord_settings, firebase_cred_settings, firebase_settings
+from utils import get_leaderboard, is_quiz_solved, save_attempt_quiz_info, save_quiz_info, save_solved_quiz_info
 
 
 with open("./emoji_dataset.json", "r", encoding="utf-8") as read_json:
     emoji_dataset = json.load(read_json)
 
 
-class aclient(discord.Client):
+class MomoBotClient(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
         self.synced = False
@@ -19,32 +25,48 @@ class aclient(discord.Client):
     async def on_ready(self):
         await self.wait_until_ready()
         if not self.synced:
-            await tree.sync(guild=discord.Object(id=int(os.environ.get("GUILD_ID"))))
+            await tree.sync(guild=discord.Object(id=discord_settings.guild_id))
             self.synced = True
+        logger.info(f"Bot({self.user}) is logged in.")
 
 
-client = aclient()
+client = MomoBotClient()
 tree = app_commands.CommandTree(client)
 
-quiz_leaderboard = {}  # TODO: 봇이 재시작하면 리더보드가 초기화되는데, 이를 방지하는 작업 필요
+# Firebase Initialization
+cred = credentials.Certificate(
+    {
+        "type": firebase_cred_settings.type,
+        "project_id": firebase_cred_settings.project_id,
+        "private_key_id": firebase_cred_settings.private_key_id,
+        "private_key": firebase_cred_settings.private_key,
+        "client_email": firebase_cred_settings.client_email,
+        "client_id": firebase_cred_settings.client_id,
+        "auth_uri": firebase_cred_settings.auth_uri,
+        "token_uri": firebase_cred_settings.token_uri,
+        "auth_provider_x509_cert_url": firebase_cred_settings.auth_provider_x509_cert_url,
+        "client_x509_cert_url": firebase_cred_settings.client_x509_cert_url,
+    }
+)
+firebase_admin.initialize_app(cred, {"databaseURL": firebase_settings.database_url})
 
 
 @tree.command(
     name="quiz",
     description="Start a Quiz!",
-    guild=discord.Object(id=int(os.environ.get("GUILD_ID"))),
+    guild=discord.Object(id=discord_settings.guild_id),
 )
 async def quiz(interaction: discord.Interaction):
-
     quiz_id = interaction.id
-    quiz_leaderboard[quiz_id] = list()
 
     number_emoji_list = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
-    n = 5
+    n = len(number_emoji_list)
     samples = random.sample(list(emoji_dataset.keys()), n)
     answer_idx = random.randrange(0, n)
     answer_title = samples[answer_idx]
     answer_emoji = emoji_dataset[answer_title]
+
+    save_quiz_info(quiz_id, answer_title, answer_emoji)
 
     embed = discord.Embed(
         title="Guess the movie!",
@@ -56,18 +78,20 @@ async def quiz(interaction: discord.Interaction):
         Button(label=samples[i], style=discord.ButtonStyle.gray, emoji=number_emoji_list[i]) for i in range(n)
     ]
 
-    async def wrong_answer_button_callback(interaction):
+    async def wrong_answer_button_callback(interaction: discord.Interaction):
+        user = interaction.user
+        user_id = user.id
 
-        if str(interaction.user) in quiz_leaderboard[quiz_id]:
+        if is_quiz_solved(quiz_id, user_id):
             embed = discord.Embed(
                 title="🚫",
                 description="You have already solved the quiz.",
                 color=discord.Color.red(),
             )
-            if interaction.user.avatar is None:
-                embed.set_thumbnail(url=interaction.user.default_avatar)
+            if user.avatar is None:
+                embed.set_thumbnail(url=user.default_avatar)
             else:
-                embed.set_thumbnail(url=interaction.user.avatar)
+                embed.set_thumbnail(url=user.avatar)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
             return
@@ -77,58 +101,68 @@ async def quiz(interaction: discord.Interaction):
             description="You answered wrong!\n\nChoose the one that seems to be the correct answer from the other examples.",
             color=discord.Color.red(),
         )
-        if interaction.user.avatar is None:
-            embed.set_thumbnail(url=interaction.user.default_avatar)
+        if user.avatar is None:
+            embed.set_thumbnail(url=user.default_avatar)
         else:
-            embed.set_thumbnail(url=interaction.user.avatar)
+            embed.set_thumbnail(url=user.avatar)
         await interaction.response.send_message(embed=embed, ephemeral=True)
+        save_attempt_quiz_info(quiz_id, user_id)
 
-    async def correct_answer_button_callback(interaction):
+    async def correct_answer_button_callback(interaction: discord.Interaction):
+        user = interaction.user
+        user_id = user.id
 
-        if str(interaction.user) in quiz_leaderboard[quiz_id]:
+        if is_quiz_solved(quiz_id, user_id):
             embed = discord.Embed(
                 title="🚫",
                 description="You have already solved the quiz.",
                 color=discord.Color.red(),
             )
-            if interaction.user.avatar is None:
-                embed.set_thumbnail(url=interaction.user.default_avatar)
+            if user.avatar is None:
+                embed.set_thumbnail(url=user.default_avatar)
             else:
-                embed.set_thumbnail(url=interaction.user.avatar)
+                embed.set_thumbnail(url=user.avatar)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
             return
-
-        quiz_leaderboard[quiz_id].append(str(interaction.user))
 
         embed = discord.Embed(
             title="⭕",
             description="You answered correct!\n\nUse `/quiz` to start a new quiz.",
             color=discord.Color.green(),
         )
-        if interaction.user.avatar is None:
-            embed.set_thumbnail(url=interaction.user.default_avatar)
+        if user.avatar is None:
+            embed.set_thumbnail(url=user.default_avatar)
         else:
-            embed.set_thumbnail(url=interaction.user.avatar)
+            embed.set_thumbnail(url=user.avatar)
 
         button = Button(label="leaderboard", style=discord.ButtonStyle.gray, emoji="🏆")
 
-        async def button_callback(interaction):
-            rank = 1
+        async def button_callback(interaction: discord.Interaction):
             description = ""
-            for user in quiz_leaderboard[quiz_id]:
-                if rank == 11:
+            for step in range(50):
+                leaderboard = get_leaderboard(quiz_id)
+                if leaderboard is None:
+                    logger.info(f"{step}/50")
+                    await asyncio.sleep(0.5)
+                else:
                     break
 
+            for rank, (user_id, data) in enumerate(leaderboard, start=1):
+                num_solved_quiz = data["num_solved_quiz"]
+                num_attempt_quiz = data["num_attempt_quiz"]
+
                 if rank == 1:
-                    description += "🥇 " + user + "\n"
+                    prefix = "🥇"
                 elif rank == 2:
-                    description += "🥈 " + user + "\n"
+                    prefix = "🥈"
                 elif rank == 3:
-                    description += "🥉 " + user + "\n"
+                    prefix = "🥉"
                 else:
-                    description += "`" + str(rank) + " ` " + user + "\n"
-                rank += 1
+                    prefix = "`{rank}`"
+
+                user_info = f"<@{user_id}>({num_solved_quiz}/{num_attempt_quiz})"
+                description = f"{prefix} {user_info}\n"
 
             embed = discord.Embed(
                 title="**Top 10**",
@@ -143,6 +177,7 @@ async def quiz(interaction: discord.Interaction):
         view.add_item(button)
 
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        save_solved_quiz_info(quiz_id, user_id)
 
     view = View(timeout=None)
     for i in range(n):
@@ -156,4 +191,4 @@ async def quiz(interaction: discord.Interaction):
     await interaction.channel.send(embed=embed, view=view)
 
 
-client.run(os.environ.get("TOKEN"))
+client.run(discord_settings.token)

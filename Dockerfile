@@ -14,7 +14,8 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     build-essential \
     curl \
-    && curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python -
+    && curl -sSL curl -sSL https://install.python-poetry.org | python3 -
+    
 
 WORKDIR /app
 COPY ./pyproject.toml ./pyproject.toml
