@@ -10,7 +10,7 @@ from firebase_admin import credentials
 from loguru import logger
 
 from settings import discord_settings, firebase_settings
-from utils import get_leaderboard, init_quiz_info, save_user_to_leaderboard
+from utils import get_leaderboard, is_quiz_solved, save_attempt_quiz_info, save_quiz_info, save_solved_quiz_info
 
 
 with open("./emoji_dataset.json", "r", encoding="utf-8") as read_json:
@@ -48,13 +48,13 @@ async def quiz(interaction: discord.Interaction):
     quiz_id = interaction.id
 
     number_emoji_list = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
-    n = 5
+    n = len(number_emoji_list)
     samples = random.sample(list(emoji_dataset.keys()), n)
     answer_idx = random.randrange(0, n)
     answer_title = samples[answer_idx]
     answer_emoji = emoji_dataset[answer_title]
 
-    init_quiz_info(quiz_id, answer_title, answer_emoji)
+    save_quiz_info(quiz_id, answer_title, answer_emoji)
 
     embed = discord.Embed(
         title="Guess the movie!",
@@ -68,23 +68,21 @@ async def quiz(interaction: discord.Interaction):
 
     async def wrong_answer_button_callback(interaction: discord.Interaction):
         user = interaction.user
-        user_name = user.name
-        leaderboard = get_leaderboard(quiz_id)
+        user_id = user.id
 
-        if leaderboard is not None:
-            if user_name in leaderboard:
-                embed = discord.Embed(
-                    title="🚫",
-                    description="You have already solved the quiz.",
-                    color=discord.Color.red(),
-                )
-                if user.avatar is None:
-                    embed.set_thumbnail(url=user.default_avatar)
-                else:
-                    embed.set_thumbnail(url=user.avatar)
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+        if is_quiz_solved(quiz_id, user_id):
+            embed = discord.Embed(
+                title="🚫",
+                description="You have already solved the quiz.",
+                color=discord.Color.red(),
+            )
+            if user.avatar is None:
+                embed.set_thumbnail(url=user.default_avatar)
+            else:
+                embed.set_thumbnail(url=user.avatar)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
-                return
+            return
 
         embed = discord.Embed(
             title="❌",
@@ -96,28 +94,25 @@ async def quiz(interaction: discord.Interaction):
         else:
             embed.set_thumbnail(url=user.avatar)
         await interaction.response.send_message(embed=embed, ephemeral=True)
+        save_attempt_quiz_info(quiz_id, user_id)
 
     async def correct_answer_button_callback(interaction: discord.Interaction):
         user = interaction.user
-        user_name = user.name
-        leaderboard = get_leaderboard(quiz_id)
+        user_id = user.id
 
-        if leaderboard is not None:
-            if user_name in leaderboard:
-                embed = discord.Embed(
-                    title="🚫",
-                    description="You have already solved the quiz.",
-                    color=discord.Color.red(),
-                )
-                if user.avatar is None:
-                    embed.set_thumbnail(url=user.default_avatar)
-                else:
-                    embed.set_thumbnail(url=user.avatar)
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+        if is_quiz_solved(quiz_id, user_id):
+            embed = discord.Embed(
+                title="🚫",
+                description="You have already solved the quiz.",
+                color=discord.Color.red(),
+            )
+            if user.avatar is None:
+                embed.set_thumbnail(url=user.default_avatar)
+            else:
+                embed.set_thumbnail(url=user.avatar)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
-                return
-
-        save_user_to_leaderboard(quiz_id, user_name)
+            return
 
         embed = discord.Embed(
             title="⭕",
@@ -132,7 +127,6 @@ async def quiz(interaction: discord.Interaction):
         button = Button(label="leaderboard", style=discord.ButtonStyle.gray, emoji="🏆")
 
         async def button_callback(interaction: discord.Interaction):
-            rank = 1
             description = ""
             for step in range(50):
                 leaderboard = get_leaderboard(quiz_id)
@@ -142,19 +136,21 @@ async def quiz(interaction: discord.Interaction):
                 else:
                     break
 
-            for user in leaderboard:
-                if rank == 11:
-                    break
+            for rank, (user_id, data) in enumerate(leaderboard, start=1):
+                num_solved_quiz = data["num_solved_quiz"]
+                num_attempt_quiz = data["num_attempt_quiz"]
 
                 if rank == 1:
-                    description += f"🥇 {user}\n"
+                    prefix = "🥇"
                 elif rank == 2:
-                    description += f"🥈 {user}\n"
+                    prefix = "🥈"
                 elif rank == 3:
-                    description += f"🥉 {user}\n"
+                    prefix = "🥉"
                 else:
-                    description += f"`{rank}` {user}\n"
-                rank += 1
+                    prefix = "`{rank}`"
+
+                user_info = f"<@{user_id}>({num_solved_quiz}/{num_attempt_quiz})"
+                description = f"{prefix} {user_info}\n"
 
             embed = discord.Embed(
                 title="**Top 10**",
@@ -169,6 +165,7 @@ async def quiz(interaction: discord.Interaction):
         view.add_item(button)
 
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        save_solved_quiz_info(quiz_id, user_id)
 
     view = View(timeout=None)
     for i in range(n):
