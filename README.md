@@ -19,13 +19,21 @@ $ git clone https://github.com/ainize-team/momo-bot.git
 $ cd momo-bot
 $ docker build -t momo-bot .
 $ docker run -d \
--e GUILD_ID=<Discord GUILD ID> \
 -e TOKEN=<Discord Bot Token> \
+-e GUILD_ID=<Discord GUILD ID> \
 -e DATABASE_URL=<Firebase Realtime Database URL> \
--v <Firebase Credential Directory Path>:/app/key \
+-e TYPE=<Firebase Cred Type> \
+-e PROJECT_ID=<Firebase Project ID> \
+-e PRIVATE_KEY_ID=<Firebase Private Key ID> \
+-e PRIVATE_KEY=<Firebase Private Key> \
+-e CLIENT_EMAIL=<Firebase Client Email> \
+-e CLIENT_ID=<Firebase Client ID> \
+-e AUTH_URI=<Firebase Auth URI> \
+-e TOKEN_URI=<Firebase token URI> \
+-e AUTH_PROVIDER_X509_CERT_URL=<Firebase Auth Provider X509 Cert URL> \
+-e CLIENT_X509_CERT_URL=<Firebase Client X509 Cert Url> \
 momo-bot
 ```
-
 
 ## Slash Commands
 ```
