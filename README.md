@@ -45,5 +45,3 @@ momo-bot
 ### Leaderboard
 <img src="https://user-images.githubusercontent.com/62659407/187357447-a8812bee-a7a5-45eb-aa89-3a948473bd1b.png" width="30%">
 
-
-
