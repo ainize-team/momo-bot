@@ -9,7 +9,7 @@ from discord.ui import Button, View
 from firebase_admin import credentials
 from loguru import logger
 
-from settings import discord_settings, firebase_settings
+from settings import discord_settings, firebase_cred_settings, firebase_settings
 from utils import get_leaderboard, is_quiz_solved, save_attempt_quiz_info, save_quiz_info, save_solved_quiz_info
 
 
@@ -33,9 +33,21 @@ class MomoBotClient(discord.Client):
 client = MomoBotClient()
 tree = app_commands.CommandTree(client)
 
-
 # Firebase Initialization
-cred = credentials.Certificate(firebase_settings.cred_path)
+cred = credentials.Certificate(
+    {
+        "type": firebase_cred_settings.type,
+        "project_id": firebase_cred_settings.project_id,
+        "private_key_id": firebase_cred_settings.private_key_id,
+        "private_key": firebase_cred_settings.private_key,
+        "client_email": firebase_cred_settings.client_email,
+        "client_id": firebase_cred_settings.client_id,
+        "auth_uri": firebase_cred_settings.auth_uri,
+        "token_uri": firebase_cred_settings.token_uri,
+        "auth_provider_x509_cert_url": firebase_cred_settings.auth_provider_x509_cert_url,
+        "client_x509_cert_url": firebase_cred_settings.client_x509_cert_url,
+    }
+)
 firebase_admin.initialize_app(cred, {"databaseURL": firebase_settings.database_url})
 
 
