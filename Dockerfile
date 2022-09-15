@@ -14,7 +14,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     build-essential \
     curl \
-    && curl -sSL curl -sSL https://install.python-poetry.org | python3 -
+    && curl -sSL https://install.python-poetry.org | python3 -
     
 
 WORKDIR /app
