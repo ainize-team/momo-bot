@@ -1,20 +1,22 @@
-from typing import List, Union
+# from typing import Dict, List, Union
 
 from firebase_admin import db
 
+from schemas import Leaderboard, LeaderboardRecord
 from settings import firebase_settings
 
 
 app_name = firebase_settings.app_name
 
 
-def save_quiz_info(quiz_id: str, quiz_title: str, quiz_emoji: str):
-    # app_name = firebase_settings.app_name
-    db.reference(f"{app_name}/quiz_info/{quiz_id}").set({"title": quiz_title, "emoji": quiz_emoji})
+def save_quiz_info(quiz_title: str, quiz_emoji: str) -> str:
+    reference = db.reference(f"{app_name}/quiz_info").push({"title": quiz_title, "emoji": quiz_emoji})
+    quiz_id = reference.key
+
+    return quiz_id
 
 
 def is_quiz_solved(quiz_id: str, user_id: str) -> bool:
-    # app_name = firebase_settings.app_name
     solved_quiz = db.reference(f"{app_name}/user_info/{user_id}/solved_quiz").get()
     if solved_quiz is None:
         return False
@@ -23,7 +25,6 @@ def is_quiz_solved(quiz_id: str, user_id: str) -> bool:
 
 
 def save_attempt_quiz_info(quiz_id: str, user_id: str):
-    # app_name = firebase_settings.app_name
     attempt_quiz = db.reference(f"{app_name}/user_info/{user_id}/attempt_quiz").get()
     if attempt_quiz is not None:
         if quiz_id in attempt_quiz:
@@ -37,7 +38,6 @@ def save_attempt_quiz_info(quiz_id: str, user_id: str):
 
 
 def save_solved_quiz_info(quiz_id: str, user_id: str):
-    # app_name = firebase_settings.app_name
     solved_quiz = db.reference(f"{app_name}/user_info/{user_id}/solved_quiz").get()
     if solved_quiz is not None:
         if quiz_id in solved_quiz:
@@ -51,13 +51,25 @@ def save_solved_quiz_info(quiz_id: str, user_id: str):
     db.reference(f"{app_name}/leaderboard/{user_id}/num_solved_quiz").set(num_solved_quiz + 1)
 
 
-def get_leaderboard(quiz_id: str) -> Union[None, List[str]]:
-    # app_name = firebase_settings.app_name
+def get_leaderboard() -> Leaderboard:
+    top_n = 10
     leaderboard = db.reference(f"{app_name}/leaderboard").get()
 
     if leaderboard is None:
         return None
 
-    leaderboard = sorted(leaderboard.items(), key=lambda x: x[1]["num_solved_quiz"])[:10]
+    leaderboard = dict(
+        sorted(leaderboard.items(), key=lambda x: (-x[1]["num_solved_quiz"], x[1]["num_attempt_quiz"]))[:top_n]
+    )
+    leaderboard = Leaderboard(
+        records=[
+            LeaderboardRecord(
+                user_id=user_id,
+                num_attempt_quiz=data["num_attempt_quiz"],
+                num_solved_quiz=data["num_solved_quiz"],
+            )
+            for user_id, data in leaderboard.items()
+        ]
+    )
 
     return leaderboard

@@ -1,4 +1,3 @@
-import asyncio
 import json
 import random
 
@@ -39,7 +38,7 @@ cred = credentials.Certificate(
         "type": firebase_cred_settings.type,
         "project_id": firebase_cred_settings.project_id,
         "private_key_id": firebase_cred_settings.private_key_id,
-        "private_key": firebase_cred_settings.private_key,
+        "private_key": firebase_cred_settings.private_key.replace("\\n", "\n"),
         "client_email": firebase_cred_settings.client_email,
         "client_id": firebase_cred_settings.client_id,
         "auth_uri": firebase_cred_settings.auth_uri,
@@ -57,8 +56,6 @@ firebase_admin.initialize_app(cred, {"databaseURL": firebase_settings.database_u
     guild=discord.Object(id=discord_settings.guild_id),
 )
 async def quiz(interaction: discord.Interaction):
-    quiz_id = interaction.id
-
     number_emoji_list = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
     n = len(number_emoji_list)
     samples = random.sample(list(emoji_dataset.keys()), n)
@@ -66,7 +63,7 @@ async def quiz(interaction: discord.Interaction):
     answer_title = samples[answer_idx]
     answer_emoji = emoji_dataset[answer_title]
 
-    save_quiz_info(quiz_id, answer_title, answer_emoji)
+    quiz_id = save_quiz_info(answer_title, answer_emoji)
 
     embed = discord.Embed(
         title="Guess the movie!",
@@ -80,7 +77,7 @@ async def quiz(interaction: discord.Interaction):
 
     async def wrong_answer_button_callback(interaction: discord.Interaction):
         user = interaction.user
-        user_id = user.id
+        user_id = str(user.id)
 
         if is_quiz_solved(quiz_id, user_id):
             embed = discord.Embed(
@@ -110,7 +107,7 @@ async def quiz(interaction: discord.Interaction):
 
     async def correct_answer_button_callback(interaction: discord.Interaction):
         user = interaction.user
-        user_id = user.id
+        user_id = str(user.id)
 
         if is_quiz_solved(quiz_id, user_id):
             embed = discord.Embed(
@@ -136,45 +133,7 @@ async def quiz(interaction: discord.Interaction):
         else:
             embed.set_thumbnail(url=user.avatar)
 
-        button = Button(label="leaderboard", style=discord.ButtonStyle.gray, emoji="🏆")
-
-        async def button_callback(interaction: discord.Interaction):
-            description = ""
-            for step in range(50):
-                leaderboard = get_leaderboard(quiz_id)
-                if leaderboard is None:
-                    logger.info(f"{step}/50")
-                    await asyncio.sleep(0.5)
-                else:
-                    break
-
-            for rank, (user_id, data) in enumerate(leaderboard, start=1):
-                num_solved_quiz = data["num_solved_quiz"]
-                num_attempt_quiz = data["num_attempt_quiz"]
-
-                if rank == 1:
-                    prefix = "🥇"
-                elif rank == 2:
-                    prefix = "🥈"
-                elif rank == 3:
-                    prefix = "🥉"
-                else:
-                    prefix = "`{rank}`"
-
-                user_info = f"<@{user_id}>({num_solved_quiz}/{num_attempt_quiz})"
-                description = f"{prefix} {user_info}\n"
-
-            embed = discord.Embed(
-                title="**Top 10**",
-                description=description,
-                color=discord.Color.green(),
-            )
-
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-
-        button.callback = button_callback
         view = View(timeout=None)
-        view.add_item(button)
 
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
         save_solved_quiz_info(quiz_id, user_id)
@@ -189,6 +148,48 @@ async def quiz(interaction: discord.Interaction):
 
     await interaction.response.send_message(answer_emoji)
     await interaction.channel.send(embed=embed, view=view)
+
+
+@tree.command(
+    name="leaderboard",
+    description="Show MOMO Quiz Leaderboard!",
+    guild=discord.Object(id=discord_settings.guild_id),
+)
+async def leaderboard(interaction: discord.Interaction):
+    user_id = str(interaction.user.id)
+    description = ""
+    leaderboard = get_leaderboard()
+
+    if leaderboard is None:
+        description = "No one is on the leaderboard yet."
+        title = "**Leaderboard**"
+    else:
+        leaderboard = leaderboard.records
+        title = "**Leaderboard**(Solved/Attempted)"
+        for rank, data in enumerate(leaderboard, start=1):
+            user_id = str(data.user_id)
+            num_solved_quiz = data.num_solved_quiz
+            num_attempt_quiz = data.num_attempt_quiz
+
+            if rank == 1:
+                prefix = "🥇"
+            elif rank == 2:
+                prefix = "🥈"
+            elif rank == 3:
+                prefix = "🥉"
+            else:
+                prefix = f"`{rank}`"
+
+            user_info = f"<@{user_id}>({num_solved_quiz}/{num_attempt_quiz})"
+            description += f"{prefix} {user_info}\n"
+
+    embed = discord.Embed(
+        title=title,
+        description=description,
+        color=discord.Color.green(),
+    )
+
+    await interaction.response.send_message(embed=embed)
 
 
 client.run(discord_settings.token)
