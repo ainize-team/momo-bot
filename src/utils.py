@@ -1,5 +1,3 @@
-# from typing import Dict, List, Union
-
 from firebase_admin import db
 
 from schemas import Leaderboard, LeaderboardRecord
