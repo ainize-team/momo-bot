@@ -162,26 +162,26 @@ async def leaderboard(interaction: discord.Interaction):
 
     if leaderboard is None:
         description = "No one is on the leaderboard yet."
-        title = "**Leaderboard**"
+        title = "🏆 **Leaderboard**"
     else:
         leaderboard = leaderboard.records
-        title = "**Leaderboard**(Solved/Attempted)"
+        title = "🏆 **Leaderboard**(Solved/Attempted)"
+
         for rank, data in enumerate(leaderboard, start=1):
             user_id = str(data.user_id)
             num_solved_quiz = data.num_solved_quiz
             num_attempt_quiz = data.num_attempt_quiz
 
-            if rank == 1:
-                prefix = "🥇"
-            elif rank == 2:
-                prefix = "🥈"
-            elif rank == 3:
-                prefix = "🥉"
-            else:
-                prefix = f"`{rank}`"
-
             user_info = f"<@{user_id}>({num_solved_quiz}/{num_attempt_quiz})"
-            description += f"{prefix} {user_info}\n"
+
+            if rank == 1:
+                description += f"🥇 {user_info}\n"
+            elif rank == 2:
+                description += f"🥈 {user_info}\n"
+            elif rank == 3:
+                description += f"🥉 {user_info}\n"
+            else:
+                description += f"`{rank}` {user_info}\n"
 
     embed = discord.Embed(
         title=title,
