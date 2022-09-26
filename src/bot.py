@@ -192,4 +192,24 @@ async def leaderboard(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
+@tree.command(
+    name="help",
+    description="Shows help for the MOMO Bot.",
+    guild=discord.Object(id=discord_settings.guild_id),
+)
+async def help(interaction: discord.Interaction):
+    content = """
+**What's MOMO?**
+    MOMO means MOvie eMOji.
+    You can guess what movie it is by looking at the emoji!
+    Users are ranked by the number of correct questions.
+
+**Basic Commands**
+    `/quiz`  Create New MOMO Quiz.
+    `/leaderboard`  Shows the leaderboard of users up to the top 10.
+"""
+
+    await interaction.response.send_message(content=content, ephemeral=True)
+
+
 client.run(discord_settings.token)
