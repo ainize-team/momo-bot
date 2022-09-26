@@ -16,7 +16,6 @@ RUN apt-get update \
     curl \
     && curl -sSL https://install.python-poetry.org | python3 -
     
-
 WORKDIR /app
 COPY ./pyproject.toml ./pyproject.toml
 COPY ./poetry.lock ./poetry.lock
