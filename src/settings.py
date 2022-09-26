@@ -20,7 +20,7 @@ class FirebaseCredSettings(BaseSettings):
 
 
 class FirebaseSettings(BaseSettings):
-    app_name: str = Field(default="momo", description="Firebase App Name")
+    app_name: str = Field(default="momo-bot", description="Firebase App Name")
     database_url: str = Field(..., description="Firebase Realtime Database URL")
 
 

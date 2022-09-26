@@ -14,13 +14,13 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     build-essential \
     curl \
-    && curl -sSL curl -sSL https://install.python-poetry.org | python3 -
+    && curl -sSL https://install.python-poetry.org | python3 -
     
 
 WORKDIR /app
 COPY ./pyproject.toml ./pyproject.toml
 COPY ./poetry.lock ./poetry.lock
-RUN poetry install --no-dev
+RUN poetry install --only main
 
 COPY ./src/ /app/
 COPY ./emoji_dataset.json /app/emoji_dataset.json
